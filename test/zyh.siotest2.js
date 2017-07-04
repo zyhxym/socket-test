@@ -1,8 +1,9 @@
 'use strict'
-var should = require('should')
+// var should = require('should')
 var io = require('socket.io-client')
 var socketURL = 'ws://121.43.107.106:4050/chat'
-var t = Date.now() % 10000
+// var t = Date.now() % 10000
+var t = 'zyh'
 var senderPrefix = t + 'sender'
 var receiverPrefix = t + 'receiver'
 
@@ -10,7 +11,7 @@ var options = {}
 // 并发测试客户端池
 var senderPool = []
 var receiverPool = []
-var POOL_LIMIT = 100
+var POOL_LIMIT = 50
 // chatuser样本
 // var chatUser1 = { 'user_name': 'siotest01', 'user_id': 'siotest01id', 'client': 'doctor' }
 // 消息样本
@@ -57,7 +58,7 @@ describe('单聊并发长时测试', function () {
 
     receiverPool.forEach(function (r, i) {
       setTimeout(function () {
-        r.emit('newUser', { 'user_name': 'receiverPrefix' + i, 'user_id': 'receiverPrefix' + i + 'id', 'client': 'patient' })
+        r.emit('newUser', { 'user_name': receiverPrefix + i, 'user_id': receiverPrefix + i + 'id', 'client': 'patient' })
         r.on('getMsg', function (data) {
           receiveSuccess++
           var t = receiveTimeArr.indexOf(data.msg.createTimeInMillis)
@@ -66,14 +67,14 @@ describe('单聊并发长时测试', function () {
           } else { duplicateReceiveTime.push(data.msg.createTimeInMillis) }
         })
         if (i === POOL_LIMIT - 1) createSender()
-      }, 100 * i)
+      }, 200 * i)
     })
 
     var createSender = function () {
       console.log('receiver created')
       senderPool.forEach(function (s, i) {
         setTimeout(function () {
-          s.emit('newUser', { 'user_name': 'senderPrefix' + i, 'user_id': 'senderPrefix' + i + 'id', 'client': 'doctor' })
+          s.emit('newUser', { 'user_name': senderPrefix + i, 'user_id': senderPrefix + i + 'id', 'client': 'doctor' })
           s.on('messageRes', function (data) {
             sendSuccess++
             var t = sendTimeArr.indexOf(data.msg.createTimeInMillis)
@@ -82,7 +83,7 @@ describe('单聊并发长时测试', function () {
             } else { duplicateSendTime.push(data.msg.createTimeInMillis) }
           })
           if (i === POOL_LIMIT - 1) sendingMessage()
-        }, 100 * i)
+        }, 200 * i)
       })
     }
 
@@ -97,11 +98,11 @@ describe('单聊并发长时测试', function () {
                 msg: {
                   clientType: 'doctor',
                   contentType: 'text',
-                  fromID: 'senderPrefix' + j + 'id',
-                  fromName: 'senderPrefix' + j,
+                  fromID: senderPrefix + j + 'id',
+                  fromName: senderPrefix + j,
                   fromUser: {},
-                  targetID: 'receiverPrefix' + j + 'id',
-                  targetName: 'receiverPrefix' + j,
+                  targetID: receiverPrefix + j + 'id',
+                  targetName: receiverPrefix + j,
                   targetType: 'single',
                   status: 'send_going',
                   createTimeInMillis: timeNow,
@@ -110,15 +111,15 @@ describe('单聊并发长时测试', function () {
                   content: 'hello',
                   test: true
                 },
-                to: 'receiverPrefix' + j + 'id',
+                to: receiverPrefix + j + 'id',
                 role: 'doctor'
               })
               sentCount++
               sendTimeArr.push(timeNow)
               receiveTimeArr.push(timeNow)
-            }, 10000)
+            }, 20000)
           }
-        }(i)), 60 * i)
+        }(i)), 500 * i)
       })
     }
   })
@@ -132,6 +133,6 @@ describe('单聊并发长时测试', function () {
             // console.log("接收失败的时间："+receiveTimeArr)
             // console.log("收到重复回执的时间："+duplicateSendTime)
             // console.log("收到重复消息的时间："+duplicateReceiveTime)
-    }, 30000)
+    }, 600000)
   })
 })
